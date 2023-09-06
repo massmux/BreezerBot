@@ -42,10 +42,6 @@ RUN     apt-get -y install sqlcipher libsqlcipher0 libsqlcipher-dev
 COPY ./requirements.txt /opt/bitzipbot/requirements.txt
 
 
-# upgrading pip3
-##RUN     /usr/local/bin/python3 -m pip install --upgrade pip
-
-
 # install requirements
 RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
