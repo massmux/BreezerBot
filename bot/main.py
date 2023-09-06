@@ -68,9 +68,6 @@ class Wallet(AddressChecker):
 
 
     def do_get_invoice(self, arg):
-        """Get lightning invoice (off-chain)
-        Usage: get_invoice <amount> [memo]
-        """
         memo = ''
         amount = arg.split(' ')[0]
         if not amount.isdigit() or int(amount) < 0:
@@ -97,11 +94,18 @@ class Wallet(AddressChecker):
 @bot.command("invoice")
 def invoice_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
-    amount, memo = args[0], args[1]
+    amount = args[0]
+    memo = ''
+    if len(args) > 1:
+        memo = ' '.join(args[1:])
     invoice = cli.do_get_invoice(f"{amount} {memo}")
     print (invoice)
-    chat.send(f"user: {chat.id}"
-              f"\n\n`{invoice}`", syntax="markdown" )
+    chat.send(f"✔️*Lightning Invoice*"
+                    f"\n\nUser: {chat.id}"
+                    f"\nAmount: {amount} Sats"
+                    f"\nMemo: {memo}"
+                    f"\n\n`{invoice}`", syntax="markdown" )
+    # caching the invoice for payment notification
     hset_redis("invoices", invoice,chat.id)
 
 
