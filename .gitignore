@@ -10,3 +10,4 @@ settings.ini
 pyenv.cfg
 redisdata
 workdir
+.idea
