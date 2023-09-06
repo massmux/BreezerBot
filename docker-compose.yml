@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+    bitzipbot:
+        container_name: bitzipbot
+        hostname: bitzipbot
+        image: massmux/bitzipbot
+        restart: on-failure
+        build:
+                context: .
+                dockerfile: Dockerfile
+        volumes:
+                - ${PWD}/bot:/opt/bitzipbot
+                - ${PWD}/workdir:/opt/bitzipbot/workdir
+                - ${PWD}/settings.ini:/opt/bitzipbot/settings.ini
+        working_dir: /opt/bitzipbot
+        entrypoint: /opt/bitzipbot/entrypoint.sh
+        environment:
+                - TZ=Europe/Rome
+        links:
+                - redisdb
+
+
+    redisdb:
+        container_name: bitzip-redisdb
+        hostname: redisdb
+        command: redis-server /usr/local/etc/redis/redis.conf
+        restart: on-failure
+        image: redis:5.0.12
+        volumes:
+                - ${PWD}/redisdata:/data
+                - ${PWD}/redisconf:/usr/local/etc/redis
+
+

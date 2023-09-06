@@ -1,0 +1,12 @@
+# created by virtualenv automatically
+secrets.txt
+bin
+lib
+share
+workdir
+__pycache__
+NOTE
+settings.ini
+pyenv.cfg
+redisdata
+workdir
