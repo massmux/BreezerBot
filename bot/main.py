@@ -17,7 +17,12 @@ class SDKListener(breez_sdk.EventListener):
 
     def on_event(self, event):
         if isinstance(event, breez_sdk.BreezEvent.INVOICE_PAID):
+            # InvoicePaidDetails(payment_hash=83a5cb998d5cd5ffece15b71f386aadc364e115f95a2d8fd112e5c28a43933bd,
+            # bolt11=lnbc10n1pj0nuyjsp52sjnzegXXXX )
             print(event.details.payment_hash)
+            print(f"[event]: INVOICE_PAID")
+            print(f"[event]: PAYMENT_HASH: {event.details.payment_hash}")
+            print(f"[event]: INVOICE\n{event.details.bolt11}")
             user = hget_redis("invoices", event.details.bolt11)
             if user:
                 hdel_redis("invoices", event.details.bolt11)
@@ -59,9 +64,7 @@ class Wallet(AddressChecker):
             node_info = self.sdk_services.node_info()
             lsp_id = self.sdk_services.lsp_id()
             lsp_info = self.sdk_services.fetch_lsp_info(lsp_id)
-            #self._print_node_info(node_info)
-            #self._print_lsp_info(lsp_info)
-            print(node_info)
+            print(f"[get_info]\n{node_info}")
             return node_info
         except Exception as error:
             print('Error getting LSP info: ', error)
@@ -76,19 +79,34 @@ class Wallet(AddressChecker):
         if len(arg.split(' ')) > 1:
             memo = ' '.join(arg.split(' ')[1:])
         print(f'Getting invoice for amount: {amount}')
+        print(f"[get_invoice]: {amount}")
         if memo:
-            print(f'With memo: {memo}')
+            print(f"[get_invoice]: {memo}")
         try:
             request = breez_sdk.ReceivePaymentRequest(amount_sats=int(amount), description=memo, preimage=None,
                                                       opening_fee_params=None)
             invoice = self.sdk_services.receive_payment(req_data=request)
-            print('Pay: ', invoice.ln_invoice.bolt11)
+            print(f"[get_invoice]: INVOICE\n{invoice.ln_invoice.bolt11}")
             return invoice.ln_invoice.bolt11
         except Exception as error:
             # Handle error
             print('error getting invoice: ', error)
 
+    def do_pay_invoice(self, args):
+        invoice = args.strip()
+        try:
+            self.sdk_services.send_payment(invoice, None)
+        except Exception as error:
+            # Handle error
+            print('error paying invoice: ', error)
 
+
+
+@bot.command("pay")
+def pay_command(handler):
+    chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    invoice = args[0]
+    result = cli.do_pay_invoice(invoice)
 
 
 @bot.command("invoice")
@@ -99,7 +117,6 @@ def invoice_command(handler):
     if len(args) > 1:
         memo = ' '.join(args[1:])
     invoice = cli.do_get_invoice(f"{amount} {memo}")
-    print (invoice)
     chat.send(f"✔️*Lightning Invoice*"
                     f"\n\nUser: {chat.id}"
                     f"\nAmount: {amount} Sats"
@@ -108,6 +125,20 @@ def invoice_command(handler):
     # caching the invoice for payment notification
     hset_redis("invoices", invoice,chat.id)
 
+
+@bot.command("info")
+def info_command(handler):
+    chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    # NodeState(id=02c6aaf466946ce43fcf56ecf6949127108c8b368c4af5c1ebe2d632c9eb5d4aa2, block_height=806614, channels_balance_msat=2858990,
+    # onchain_balance_msat=0, utxos=[], max_payable_msat=2858990, max_receivable_msat=3997141010, max_single_payment_amount_msat=4294967000,
+    # max_chan_reserve_msats=0, connected_peers=['02c811e575be2df47d8b48dab3d3f1c9b0f6e16d0d40b5ed78253308fc2bd7170d'], inbound_liquidity_msats=90923010)
+    nodeinfo = cli.get_info()
+    chat.send(f"✔️*Wallet Info*"
+              f"\n\nChannels balance: {nodeinfo.channels_balance_msat/1000} Sats"
+              f"\nMax payable: {nodeinfo.max_payable_msat/1000} Sats"
+              f"\nMax receivable: {nodeinfo.max_receivable_msat/1000} Sats"
+              f"\nOn-chain balance: {nodeinfo.onchain_balance_msat/1000} Sats"
+              )
 
 
 def events_processor(bot):
