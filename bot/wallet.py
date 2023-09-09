@@ -30,15 +30,10 @@ class SDKListener(breez_sdk.EventListener):
             # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
             # payment_preimage=155fc30aca10af5e9646b1174ab236dac2fc130d7d531379a504dad0a027bbb6, keysend=False,
             # bolt11=lnbc10n1pj0kkfkpp5a65y2aucc6usx6gy5cr4whtx294nl9s57c04mg4vlv2uwqynpdpsdqdwf5kxetkdXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
-            #a=event.details
             print(f"event details {event.details}")
             print(f"[event]: PAYMENT_SUCCEED"
-                  f"[event]: PAYMENT_ID: {event.details.id}"
-                  f"[event]: INVOICE\n{event.details.details.data.bolt11}")
-            #user = hget_redis("invoices", a.details.data.bolt11)
-            #if user:
-            #    hdel_redis("invoices", a.details.data.bolt11)
-            #    hset_redis("payment.succeed", user, a.details.data.bolt11)
+                  f"\n[event]: PAYMENT_ID: {event.details.id}"
+                  f"\n[event]: INVOICE\n{event.details.details.data.bolt11}")
         elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_FAILED):
             print(f"event details {event.details}")
 
