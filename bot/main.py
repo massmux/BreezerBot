@@ -19,6 +19,7 @@ class SDKListener(breez_sdk.EventListener):
         if isinstance(event, breez_sdk.BreezEvent.INVOICE_PAID):
             # InvoicePaidDetails(payment_hash=83a5cb998d5cd5ffece15b71f386aadc364e115f95a2d8fd112e5c28a43933bd,
             # bolt11=lnbc10n1pj0nuyjsp52sjnzegXXXX )
+            print(f"event details: {event.details}")
             print(event.details.payment_hash)
             print(f"[event]: INVOICE_PAID")
             print(f"[event]: PAYMENT_HASH: {event.details.payment_hash}")
@@ -28,10 +29,22 @@ class SDKListener(breez_sdk.EventListener):
                 hdel_redis("invoices", event.details.bolt11)
                 hset_redis("invoice.paid", user, event.details.bolt11)
         elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_SUCCEED):
-            print(event.details)
+            # Payment(id=eea8457798c6b9036904a607575d66516b3f9614f61f5da2acfb15c700930b43, payment_type=PaymentType.SENT, payment_time=1694193980,
+            # amount_msat=1000, fee_msat=1004, pending=False, description=ricevi 3,
+            # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=eea8457798c6b9036904a607575d66516b3f9614f61f5da2acfb15c700930b43,
+            # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+            # payment_preimage=155fc30aca10af5e9646b1174ab236dac2fc130d7d531379a504dad0a027bbb6, keysend=False,
+            # bolt11=lnbc10n1pj0kkfkpp5a65y2aucc6usx6gy5cr4whtx294nl9s57c04mg4vlv2uwqynpdpsdqdwf5kxetkdXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
+            a=event.details
+            print(f"event details {event.details}")
+            print(f"[event]: PAYMENT_SUCCEED")
+            print(f"[event]: PAYMENT_ID: {event.details.id}")
+            print(f"[event]: INVOICE\n{a.details.data.bolt11}")
+            #user = hget_redis("invoices", a.details.data.bolt11)
+            #if user:
+            #    hdel_redis("invoices", a.details.data.bolt11)
+            #    hset_redis("payment.succeed", user, a.details.data.bolt11)
         elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_FAILED):
-            print(event.details)
-        elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_SUCCEED):
             print(event.details)
 
 
@@ -92,21 +105,41 @@ class Wallet(AddressChecker):
             # Handle error
             print('error getting invoice: ', error)
 
+
     def do_pay_invoice(self, args):
         invoice = args.strip()
         try:
-            self.sdk_services.send_payment(invoice, None)
+            res=self.sdk_services.send_payment(invoice, None)
+            return res
         except Exception as error:
             # Handle error
             print('error paying invoice: ', error)
+            return False
+
 
 
 
 @bot.command("pay")
 def pay_command(handler):
+    # result Payment(id=45400f9d18edddc93fa6506878bfea1e23956f20d1408536c6bdfb073e443be2, payment_type=PaymentType.SENT, payment_time=1694239982,
+    # amount_msat=1000, fee_msat=1004, pending=False, description=f,
+    # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=45400f9d18edddc93fa6506878bfea1e23956f20d1408536c6bdfb073e443be2, label=,
+    # destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+    # payment_preimage=9a89e8c0f2c3ea20c7fe8d3a885cb84a084d3872b384cbd94ca1f6e71fb11ca4, keysend=False,
+    # bolt11=lnbc10n1pj0cr8qpp5gXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
     invoice = args[0]
+    please_wait = chat.send(f"*Payment in progress*. This may take several seconds, ❗*please wait..*❗",syntax='markdown')
     result = cli.do_pay_invoice(invoice)
+    print(f"result {result}")
+    please_wait.delete()
+    chat.send(f"✔️*Invoice payment*"
+              f"\n\nStatus: Succeed"
+              f"\n\nAmount: {result.amount_msat/1000} Sats"
+              f"\nFees: {result.fee_msat/1000} Sats "
+              f"\nDescription: {result.description}"
+              f"\nPending: {result.pending}"
+              f"\nPayment hash: {result.details.data.payment_hash} ", syntax="markdown")
 
 
 @bot.command("invoice")
@@ -150,6 +183,13 @@ def events_processor(bot):
         bot.chat(i.decode('utf-8')).send(f"✔️*Invoice paid*"
                                          f"\n\n{invoice}", syntax="markdown")
         hdel_redis("invoice.paid", i)
+    payment_succeed = hkeys_redis("payment.succeed")
+    for i in payment_succeed:
+        print(f"Processing payment.succeed {i}")
+        invoice = hget_redis('payment.succeed', i)
+        bot.chat(i.decode('utf-8')).send(f"✔️*Payment succeed*"
+                                         f"\n\n{invoice}", syntax="markdown")
+        hdel_redis("payment.succeed", i)
 
 
 schedule.every(30).seconds.do(events_processor, bot)
@@ -160,7 +200,6 @@ if __name__ == "__main__":
     cli = Wallet()
     while (1):
         schedule.run_pending()
-        #ev = breez_sdk.EventListener()
         ev = SDKListener()
         if ev.status.get('success'):
             print (f"status {ev.status}")
