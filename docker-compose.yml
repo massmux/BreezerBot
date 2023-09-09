@@ -2,19 +2,19 @@ version: "3.7"
 
 services:
     bitzipbot:
-        container_name: bitzipbot
-        hostname: bitzipbot
-        image: massmux/bitzipbot
+        container_name: breezerbot
+        hostname: breezerbot
+        image: massmux/breezerbot
         restart: on-failure
         build:
                 context: .
                 dockerfile: Dockerfile
         volumes:
-                - ${PWD}/bot:/opt/bitzipbot
-                - ${PWD}/workdir:/opt/bitzipbot/workdir
-                - ${PWD}/settings.ini:/opt/bitzipbot/settings.ini
-        working_dir: /opt/bitzipbot
-        entrypoint: /opt/bitzipbot/entrypoint.sh
+                - ${PWD}/bot:/opt/breezerbot
+                - ${PWD}/workdir:/opt/breezerbot/workdir
+                - ${PWD}/settings.ini:/opt/breezerbot/settings.ini
+        working_dir: /opt/breezerbot
+        entrypoint: /opt/breezerbot/entrypoint.sh
         environment:
                 - TZ=Europe/Rome
         links:
@@ -22,7 +22,7 @@ services:
 
 
     redisdb:
-        container_name: bitzip-redisdb
+        container_name: breezerbot-redisdb
         hostname: redisdb
         command: redis-server /usr/local/etc/redis/redis.conf
         restart: on-failure

@@ -17,7 +17,7 @@ RUN cp /opt/breez-sdk/libs/sdk-bindings/ffi/python/* /usr/lib/python3.11/
 WORKDIR /opt/
 
 
-WORKDIR /opt/bitzipbot
+WORKDIR /opt/breezerbot
 
 
 # installing the redis-cli
@@ -39,7 +39,7 @@ RUN     apt-get -y install sqlcipher libsqlcipher0 libsqlcipher-dev
 
 
 # add requirements.txt
-COPY ./requirements.txt /opt/bitzipbot/requirements.txt
+COPY ./requirements.txt /opt/breezerbot/requirements.txt
 
 
 # install requirements
