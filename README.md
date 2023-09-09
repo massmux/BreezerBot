@@ -1,3 +1,3 @@
-# BitZipBot
+# BreezerBot
 
-breez implementation for Telegram
+Pythonic Breez implementation for Telegram

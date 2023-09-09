@@ -13,6 +13,7 @@ class SDKListener(breez_sdk.EventListener):
         self.status={}
 
     def on_event(self, event):
+        # todo: add all events to a rediskey. schedule will message the main events
         if isinstance(event, breez_sdk.BreezEvent.INVOICE_PAID):
             # InvoicePaidDetails(payment_hash=83a5cb998d5cd5ffece15b71f386aadc364e115f95a2d8fd112e5c28a43933bd,
             # bolt11=lnbc10n1pj0nuyjsp52sjnzegXXXX )
