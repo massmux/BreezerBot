@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 
-#from commons import *
-#import bip39
-#from address_checker import AddressChecker
-#import breez_sdk
-#from secrets_loader import load_secrets
 import schedule
-
 from wallet import *
 
 #https://github.com/tmrwapp/breez-sdk-cli-wallet/
 
+
+@bot.command("start")
+def start_command(handler):
+    chat = bbot.Chat(bot, handler.chat)
+    chat.send(f"🖖Breez(er) Bot, Welcome"
+              f"\n\nPythonic non custodial breez sdk implementation."
+              f"\n\nCommands summary"
+              f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
+              f"\n/pay <BOLT11> 👉 Pay an invoice",syntax="markdown")
+    nodeinfo = cli.get_info()
+    if nodeinfo.channels_balance_msat==0:
+        chat.send(f"🤚Please note:"
+              f"\n\nYour balance in channels is actually: {nodeinfo.channels_balance_msat/1000} Sats"
+              f"\n\nA minimum amount of at least 3000 Sats is necessary to start. Just issue a Lightning invoice and get it paid from an external source.",syntax="markdown")
 
 
 @bot.command("pay")
@@ -36,6 +44,8 @@ def pay_command(handler):
               f"\nPayment hash: {result.details.data.payment_hash} ", syntax="markdown")
 
 
+
+
 @bot.command("invoice")
 def invoice_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
@@ -50,7 +60,8 @@ def invoice_command(handler):
                     f"\nMemo: {memo}"
                     f"\n\n`{invoice}`", syntax="markdown" )
     # caching the invoice for payment notification
-    hset_redis("invoices", invoice,chat.id)
+    hset_redis("invoices", invoice, chat.id)
+
 
 
 @bot.command("info")
@@ -65,7 +76,9 @@ def info_command(handler):
               f"\nMax payable: {nodeinfo.max_payable_msat/1000} Sats"
               f"\nMax receivable: {nodeinfo.max_receivable_msat/1000} Sats"
               f"\nOn-chain balance: {nodeinfo.onchain_balance_msat/1000} Sats"
+              f"\nChannels balance: {nodeinfo.channels_balance_msat / 1000} Sats"
               )
+
 
 
 def events_processor(bot):

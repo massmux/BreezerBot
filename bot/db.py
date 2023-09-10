@@ -52,6 +52,7 @@ def hget_redis(name,field):
     except:
         return False
 
+
 def hdel_redis(name,field):
     try:
         obj = r.hdel(name,field)
@@ -66,3 +67,20 @@ def hkeys_redis(name):
         return obj
     except:
         return False
+
+
+def set_secrets(userid,keyset):
+    # {'phrase': 'diary rage begin xx', 'invite_code': 'AAAA-BBBB', 'api_key': 'XXXX='}
+    if hset_redis('secrets', userid, json.dumps(keyset)):
+        return True
+    else:
+        return False
+
+
+def get_secrets(userid):
+    a=hget_redis('secrets',userid)
+    if a:
+        return json.loads(a)
+    else:
+        return {}
+
