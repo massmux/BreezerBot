@@ -85,18 +85,7 @@ def get_secrets(userid):
         return {}
 
 
-def set_event(userid, keyset):
-    if hset_redis('events', userid, json.dumps(keyset)):
-        return True
-    else:
-        return False
 
-def get_event(userid):
-    a=hget_redis('events', userid)
-    if a:
-        return json.loads(a)
-    else:
-        return {}
 
 
 class InvoiceData:

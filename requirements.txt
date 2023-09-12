@@ -6,7 +6,6 @@ e-x==1.16.0
 fastapi==0.96.0
 flex-text-table==2.6.0
 gl-client==0.1.8
-#glcli==0.1.8
 grpcio==1.54.2
 idna==3.4
 protobuf==3.20.3
@@ -20,3 +19,5 @@ pyTelegramBotAPI==4.13.0
 schedule==1.1.0
 redis==4.2.0
 simplejson==3.17.6
+qrcode==7.3.1
+Pillow==9.0.1

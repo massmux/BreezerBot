@@ -2,6 +2,7 @@
 
 import schedule
 from wallet import *
+from models import Invoice
 
 #https://github.com/tmrwapp/breez-sdk-cli-wallet/
 
@@ -14,7 +15,8 @@ def start_command(handler):
               f"\n\nCommands summary"
               f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
               f"\n/pay <BOLT11> 👉 Pay an invoice"
-              f"\n/info Get status and balance",syntax="markdown")
+              f"\n/info Get status and balance"
+              f"\n/start This message",syntax="markdown")
     nodeinfo = cli.get_info()
     if nodeinfo.channels_balance_msat==0:
         chat.send(f"🤚Please note:"
@@ -59,13 +61,23 @@ def invoice_command(handler):
     if len(args) > 1:
         memo = ' '.join(args[1:])
     invoice = cli.get_invoice(f"{amount} {memo}")
-    chat.send(f"⚡️*Lightning Invoice*"
-                    f"\n\nUser: {chat.id}"
-                    f"\nAmount: {amount} Sats"
-                    f"\nMemo: {memo}"
-                    f"\n\n`{invoice}`", syntax="markdown" )
+    #chat.send(f"⚡️*Lightning Invoice*"
+    #                f"\n\nUser: {chat.id}"
+    #                f"\nAmount: {amount} Sats"
+    #                f"\nMemo: {memo}"
+    #                f"\n\n`{invoice}`", syntax="markdown" )
+    caption =f"⚡️*Lightning Invoice*" \
+             f"\n\nUser: {chat.id}" \
+             f"\nAmount: {amount} Sats" \
+             f"\nMemo: {memo}" \
+             f"\n\n`{invoice}`"
     a = InvoiceData()
     a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':amount,'memo':memo,'payment_hash':''})
+    qrdir=os.getcwd() + "/qrdir"
+    qr=Invoice(invoice,qrdir)
+    qrfile=qr.generate()
+    chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
+
 
 
 
