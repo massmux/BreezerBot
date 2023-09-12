@@ -20,10 +20,14 @@ class SDKListener(breez_sdk.EventListener):
             print(f"[event]: INVOICE_PAID"
                   f"\n[event]: PAYMENT_HASH: {event.details.payment_hash}"
                   f"\n[event]: INVOICE\n{event.details.bolt11}")
-            user = hget_redis("invoices", event.details.bolt11)
-            if user:
+            a = InvoiceData()
+            result = a.get_invoice(event.details.bolt11)
+            user = result['user']
+            if result:
                 hdel_redis("invoices", event.details.bolt11)
-                hset_redis("invoice.paid", user, event.details.bolt11)
+                result['payment_hash'] = event.details.payment_hash
+                b = EventData()
+                b.set_event('invoice.paid', user, result)
         elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_SUCCEED):
             # Payment(id=eea8457798c6b9036904a607575d66516b3f9614f61f5da2acfb15c700930b43, payment_type=PaymentType.SENT, payment_time=1694193980,
             # amount_msat=1000, fee_msat=1004, pending=False, description=ricevi 3,
@@ -35,10 +39,17 @@ class SDKListener(breez_sdk.EventListener):
             print(f"[event]: PAYMENT_SUCCEED"
                   f"\n[event]: PAYMENT_ID: {event.details.id}"
                   f"\n[event]: INVOICE\n{event.details.details.data.bolt11}")
-            user = hget_redis('invoices', event.details.details.data.bolt11)
-            if user:
+            a = InvoiceData()
+            result = a.get_invoice(event.details.details.data.bolt11)
+            user = result['user']
+            if result:
                 hdel_redis("invoices", event.details.details.data.bolt11)
-                hset_redis("payment.succeed", user, event.details.details.data.bolt11)
+                result['invoice'] = event.details.details.data.bolt11
+                result['payment_hash'] = event.details.details.data.payment_hash
+                result['amount'] = event.details.amount_msat/1000
+                result['memo'] = event.details.description
+                b = EventData()
+                b.set_event('payment.succeed', user, result)
         elif isinstance(event, breez_sdk.BreezEvent.PAYMENT_FAILED):
             print(f"event details {event.details}")
 
