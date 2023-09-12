@@ -61,11 +61,6 @@ def invoice_command(handler):
     if len(args) > 1:
         memo = ' '.join(args[1:])
     invoice = cli.get_invoice(f"{amount} {memo}")
-    #chat.send(f"⚡️*Lightning Invoice*"
-    #                f"\n\nUser: {chat.id}"
-    #                f"\nAmount: {amount} Sats"
-    #                f"\nMemo: {memo}"
-    #                f"\n\n`{invoice}`", syntax="markdown" )
     caption =f"⚡️*Lightning Invoice*" \
              f"\n\nUser: {chat.id}" \
              f"\nAmount: {amount} Sats" \

@@ -17,10 +17,8 @@ class Invoice:
 
     def create_id(self):
         time_id = self.get_timeid()
-        time_id_short = time_id[:len(time_id) - 6]
         random_num = random.randint(100000000, 999999999)
-        residual_part = time_id_short + str(random_num)
-        generated_id = f"{time_id}{residual_part}"[:12]
+        generated_id = f"{time_id}{random_num}"[:12]
         return generated_id
 
 
