@@ -39,21 +39,21 @@ def del_obj_redis(name):
 def hset_redis(name, field, val):
     # it saves in key "name" the field=val
     try:
-        r.hset(name,field,val)
+        r.hset(name, field, val)
         return True
     except:
         return False
 
 
-def hget_redis(name,field):
+def hget_redis(name, field):
     try:
-        obj = r.hget(name,field).decode('utf-8')
+        obj = r.hget(name, field).decode('utf-8')
         return obj
     except:
         return False
 
 
-def hdel_redis(name,field):
+def hdel_redis(name, field):
     try:
         obj = r.hdel(name,field)
         return obj
@@ -69,7 +69,7 @@ def hkeys_redis(name):
         return False
 
 
-def set_secrets(userid,keyset):
+def set_secrets(userid, keyset):
     # {'phrase': 'diary rage begin xx', 'invite_code': 'AAAA-BBBB', 'api_key': 'XXXX='}
     if hset_redis('secrets', userid, json.dumps(keyset)):
         return True
@@ -78,9 +78,22 @@ def set_secrets(userid,keyset):
 
 
 def get_secrets(userid):
-    a=hget_redis('secrets',userid)
+    a=hget_redis('secrets', userid)
     if a:
         return json.loads(a)
     else:
         return {}
 
+
+def set_event(userid, keyset):
+    if hset_redis('events', userid, json.dumps(keyset)):
+        return True
+    else:
+        return False
+
+def get_event(userid):
+    a=hget_redis('events', userid)
+    if a:
+        return json.loads(a)
+    else:
+        return {}

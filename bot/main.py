@@ -31,6 +31,8 @@ def pay_command(handler):
     # bolt11=lnbc10n1pj0cr8qpp5gXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
     invoice = args[0]
+    # caching the invoice for payment notification #qui
+    hset_redis("invoices", invoice, chat.id)
     please_wait = chat.send(f"*Payment in progress*. This may take several seconds, ❗*please wait..*❗",syntax='markdown')
     result = cli.pay_invoice(invoice)
     print(f"result {result}")
@@ -42,7 +44,6 @@ def pay_command(handler):
               f"\nDescription: {result.description}"
               f"\nPending: {result.pending}"
               f"\nPayment hash: {result.details.data.payment_hash} ", syntax="markdown")
-
 
 
 
@@ -84,6 +85,7 @@ def info_command(handler):
 def events_processor(bot):
     # get events list and make notifications to the user
     invoices_paid = hkeys_redis("invoice.paid")
+
     for i in invoices_paid:
         print(f"Processing invoice.paid {i}")
         invoice = hget_redis('invoice.paid', i)
@@ -91,6 +93,7 @@ def events_processor(bot):
                                          f"\n\n{invoice}", syntax="markdown")
         hdel_redis("invoice.paid", i)
     payment_succeed = hkeys_redis("payment.succeed")
+    print(f"payment succeed {payment_succeed}")
     for i in payment_succeed:
         print(f"Processing payment.succeed {i}")
         invoice = hget_redis('payment.succeed', i)
