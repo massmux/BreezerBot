@@ -46,6 +46,14 @@ docker-compose up -d
 
 Now start with your wallet on Telegram
 
+## Features
+
+At the moment we implemented the following features:
+
+- Get balance and status
+- Generation of Lightning invoice and payment detect
+- Payment of a Lightning invoice
+
 ## Thanks
 
 Thanks to tmrwapp for snippets and ideas.
