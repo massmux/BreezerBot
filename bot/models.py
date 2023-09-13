@@ -1,9 +1,11 @@
 import qrcode
 import random
 from datetime import datetime
+from db import r
+import simplejson as json
 
 
-class Invoice:
+class InvoiceQR:
 
     def __init__(self,invoice,qrdir):
         self.invoice = invoice
@@ -35,3 +37,40 @@ class Invoice:
         qrfile = self.qrdir + "/"+ self.create_id() + ".png"
         voucher_qrcode_img.save(qrfile)
         return qrfile
+
+
+
+class InvoiceData:
+
+    def set_invoice(self,invoice,payload):
+        #payload = {'user': '','bolt11': '', 'amount': '','memo': '','payment_hash': ''}
+        ret = r.hset('invoices', invoice, json.dumps(payload))
+        if ret:
+            return ret
+        else:
+            return False
+
+    def get_invoice(self,invoice):
+        a = r.hget('invoices', invoice).decode('utf-8')
+        if a:
+            return json.loads(a)
+        else:
+            return False
+
+
+class EventData:
+
+    def set_event(self,event,userid,payload):
+        #payload = {'user': '','bolt11': '','amount': '','memo': '','payment_hash': ''}
+        ret = r.hset(event, userid, json.dumps(payload))
+        if ret:
+            return ret
+        else:
+            return False
+
+    def get_event(self,event,userid):
+        a = r.hget(event, userid).decode('utf-8')
+        if a:
+            return json.loads(a)
+        else:
+            return False

@@ -6,7 +6,7 @@ import os
 from address_checker import AddressChecker
 import breez_sdk
 from secrets_loader import load_secrets
-
+from models import InvoiceData, EventData
 
 class SDKListener(breez_sdk.EventListener):
     def __init__(self):
@@ -71,10 +71,9 @@ class Wallet(AddressChecker):
         config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, api_key,
             breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
 
-        # Customize the config object according to your needs
         config.working_dir = os.getcwd() + "/workdir"
 
-        # Connect to the Breez SDK make it ready for use
+        # Connect to the Breez SDK
         self.sdk_services = breez_sdk.connect(config, seed, SDKListener())
 
 

@@ -2,9 +2,15 @@
 
 import schedule
 from wallet import *
-from models import Invoice
+from models import InvoiceQR, InvoiceData, EventData
 
 #https://github.com/tmrwapp/breez-sdk-cli-wallet/
+
+
+@bot.command("version")
+def version_command(handler):
+    chat = bbot.Chat(bot, handler.chat)
+    chat.send("BreezerBot version 0.0.1 build 20230913")
 
 
 @bot.command("start")
@@ -68,9 +74,9 @@ def invoice_command(handler):
              f"\n\n`{invoice}`"
     a = InvoiceData()
     a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':amount,'memo':memo,'payment_hash':''})
-    qrdir=os.getcwd() + "/qrdir"
-    qr=Invoice(invoice,qrdir)
-    qrfile=qr.generate()
+    qrdir = os.getcwd() + "/qrdir"
+    qr = InvoiceQR(invoice,qrdir)
+    qrfile = qr.generate()
     chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
 
 
@@ -83,7 +89,7 @@ def info_command(handler):
     # onchain_balance_msat=0, utxos=[], max_payable_msat=2858990, max_receivable_msat=3997141010, max_single_payment_amount_msat=4294967000,
     # max_chan_reserve_msats=0, connected_peers=['02c811e575be2df47d8b48dab3d3f1c9b0f6e16d0d40b5ed78253308fc2bd7170d'], inbound_liquidity_msats=90923010)
     nodeinfo = cli.get_info()
-    chat.send(f"✔️*Wallet Info*"
+    chat.send(f"💰*Wallet Info*"
               f"\n\nChannels balance: {nodeinfo.channels_balance_msat/1000} Sats"
               f"\nMax payable: {nodeinfo.max_payable_msat/1000} Sats"
               f"\nMax receivable: {nodeinfo.max_receivable_msat/1000} Sats"
@@ -95,6 +101,7 @@ def info_command(handler):
 
 def events_processor(bot):
     # get events list and make notifications to the user
+    
     invoices_paid = hkeys_redis("invoice.paid")
     for i in invoices_paid:
         print(f"Processing invoice.paid {i}")
