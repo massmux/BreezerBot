@@ -5,8 +5,8 @@ import bip39
 import os
 from address_checker import AddressChecker
 import breez_sdk
-from secrets_loader import load_secrets
 from models import InvoiceData, EventData
+
 
 class SDKListener(breez_sdk.EventListener):
     def __init__(self):
@@ -59,13 +59,10 @@ class Wallet(AddressChecker):
         super().__init__()
         AddressChecker.__init__(self)
 
-        # Load secrets from file
-        secrets = load_secrets('secrets.txt')
-
-        # Create the default config
-        mnemonic = secrets['phrase']
-        invite_code = secrets['invite_code']
-        api_key = secrets['api_key']
+        # Load settings
+        mnemonic = settings['secrets']['phrase']
+        invite_code = settings['secrets']['invite_code']
+        api_key = settings['secrets']['api_key']
         seed = bip39.phrase_to_seed(mnemonic)
 
         config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, api_key,

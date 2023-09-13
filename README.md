@@ -17,10 +17,11 @@ git clone https://github.com/massmux/BreezerBot.git
 cd BreezerBot
 ```
 
-configure the files:
+configure the settings.ini file :
 
-- settings.ini . In this file the Telegram Bot API key is necessary
-- secrets.txt this contains your secrets (seed phrase and access keys to the Breez system)
+- Telegram API from bothfather
+- Breez SDK: API key, invite code
+- Your own mnemonic phrase
 
 the docker containers may be built or downloaded from docker hub. In first case the building may take a long time. Please bear in mind that images will be quite big (because of the bindings). You have to consider to have aroung 11 GB free on your system.
 
@@ -44,3 +45,8 @@ docker-compose up -d
 ```
 
 Now start with your wallet on Telegram
+
+
+## Disclaimer
+
+This software is in early stage. Use at your own risk. No liability is take for any action with this software. This software is Open Source software.

@@ -3,7 +3,11 @@ import random
 from datetime import datetime
 from db import r
 import simplejson as json
+import configparser
 
+
+settings = configparser.ConfigParser()
+settings.read('settings.ini')
 
 class InvoiceQR:
 
@@ -74,3 +78,16 @@ class EventData:
             return json.loads(a)
         else:
             return False
+
+
+class TlgUser:
+    def __init__(self,userid):
+        self.userid = userid
+
+    def is_authorized(self):
+        if str(self.userid) != settings['secrets']['telegram_user']:
+            return False
+        else:
+            return True
+
+

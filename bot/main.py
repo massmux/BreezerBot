@@ -2,7 +2,7 @@
 
 import schedule
 from wallet import *
-from models import InvoiceQR, InvoiceData, EventData
+from models import InvoiceQR, InvoiceData, EventData, TlgUser
 
 #https://github.com/tmrwapp/breez-sdk-cli-wallet/
 
@@ -16,6 +16,10 @@ def version_command(handler):
 @bot.command("start")
 def start_command(handler):
     chat = bbot.Chat(bot, handler.chat)
+    tlg = TlgUser(chat.id)
+    if not tlg.is_authorized():
+        chat.send(f"❌User not authorized!")
+        return
     chat.send(f"🖖Breez(er) Bot, Welcome"
               f"\n\nPythonic non custodial breez sdk implementation."
               f"\n\nCommands summary"
@@ -39,6 +43,10 @@ def pay_command(handler):
     # payment_preimage=9a89e8c0f2c3ea20c7fe8d3a885cb84a084d3872b384cbd94ca1f6e71fb11ca4, keysend=False,
     # bolt11=lnbc10n1pj0cr8qpp5gXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    tlg = TlgUser(chat.id)
+    if not tlg.is_authorized():
+        chat.send(f"❌User not authorized!")
+        return
     invoice = args[0]
     # caching the invoice for payment notification #qui
     hset_redis("invoices", invoice, chat.id)
@@ -62,6 +70,10 @@ def pay_command(handler):
 @bot.command("invoice")
 def invoice_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    tlg = TlgUser(chat.id)
+    if not tlg.is_authorized():
+        chat.send(f"❌User not authorized!")
+        return
     amount = args[0]
     memo = ''
     if len(args) > 1:
@@ -88,6 +100,10 @@ def info_command(handler):
     # NodeState(id=02c6aaf466946ce43fcf56ecf6949127108c8b368c4af5c1ebe2d632c9eb5d4aa2, block_height=806614, channels_balance_msat=2858990,
     # onchain_balance_msat=0, utxos=[], max_payable_msat=2858990, max_receivable_msat=3997141010, max_single_payment_amount_msat=4294967000,
     # max_chan_reserve_msats=0, connected_peers=['02c811e575be2df47d8b48dab3d3f1c9b0f6e16d0d40b5ed78253308fc2bd7170d'], inbound_liquidity_msats=90923010)
+    tlg = TlgUser(chat.id)
+    if not tlg.is_authorized():
+        chat.send(f"❌User not authorized!")
+        return
     nodeinfo = cli.get_info()
     chat.send(f"💰*Wallet Info*"
               f"\n\nChannels balance: {nodeinfo.channels_balance_msat/1000} Sats"
@@ -101,7 +117,7 @@ def info_command(handler):
 
 def events_processor(bot):
     # get events list and make notifications to the user
-    
+
     invoices_paid = hkeys_redis("invoice.paid")
     for i in invoices_paid:
         print(f"Processing invoice.paid {i}")
@@ -110,7 +126,7 @@ def events_processor(bot):
         print(f"result {result}")
         invoice = result['bolt11']
         bot.chat(i.decode('utf-8')).send(f"🎉*Payment Received*"
-                                         f"\n\nAmount: {result['amount']}"
+                                         f"\n\nAmount: {result['amount']} Sats"
                                          f"\nMemo: {result['memo']}"
                                          f"\nPayment hash: {result['payment_hash']}", syntax="markdown")
         hdel_redis("invoice.paid", i)
