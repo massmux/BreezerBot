@@ -14,8 +14,9 @@ RUN make python-linux
 
 
 RUN cp /opt/breez-sdk/libs/sdk-bindings/ffi/python/* /usr/lib/python3.11/
-WORKDIR /opt/
+#WORKDIR /opt/
 
+COPY ./bot /opt/breezerbot
 
 WORKDIR /opt/breezerbot
 

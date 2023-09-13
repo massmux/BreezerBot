@@ -46,6 +46,11 @@ docker-compose up -d
 
 Now start with your wallet on Telegram
 
+## Thanks
+
+Thanks to tmrwapp for snippets and ideas.
+
+Thanks to the Breez SDK team https://github.com/breez/breez-sdk
 
 ## Disclaimer
 
