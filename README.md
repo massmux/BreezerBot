@@ -6,11 +6,11 @@ This software implements Breez SDK and makes then possible to have a non custodi
 
 ## Installation
 
-### get the Telegram API Key
+### Get the Telegram API Key
 
-open Telegram with your account and use Botfather. Create a new Bot (with name and username you want), take the resulting API Key to be put in the settings file of your software installation
+In order to register a new Bot on Telegra, just open Telegram with your account and use Botfather. Create a new Bot (with name and username you want), take the resulting API Key to be put in the settings file of your software installation
 
-### software installation
+### Software installation
 
 ```
 git clone https://github.com/massmux/BreezerBot.git
@@ -30,7 +30,7 @@ to build
 docker build -t massmux/breezerbot .
 ```
 
-to get from the repository
+Otherwise you can get from from the repository, pulling the image
 
 ```
 docker pull massmux/breezerbot
