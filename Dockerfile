@@ -1,7 +1,7 @@
 FROM rust:1.72.0
 
 RUN apt-get update
-RUN apt-get install -y protobuf-compiler
+RUN apt-get install -y protobuf-compiler musl-tools
 RUN cd /opt/ && git clone https://github.com/breez/breez-sdk.git
 
 
@@ -14,10 +14,7 @@ RUN make python-linux
 
 
 RUN cp /opt/breez-sdk/libs/sdk-bindings/ffi/python/* /usr/lib/python3.11/
-#WORKDIR /opt/
-
 COPY ./bot /opt/breezerbot
-
 WORKDIR /opt/breezerbot
 
 
@@ -36,7 +33,7 @@ RUN     apt-get -y install build-essential python-dev-is-python3 python3-dev lib
 
 
 # prerequisites for encrypted database for bitcoinlib
-RUN     apt-get -y install sqlcipher libsqlcipher0 libsqlcipher-dev
+RUN     apt-get -y install sqlcipher libsqlcipher0 libsqlcipher-dev python3-plyvel
 
 
 # add requirements.txt

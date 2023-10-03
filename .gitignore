@@ -12,3 +12,4 @@ redisdata
 workdir
 .idea
 qrdir
+tests.py

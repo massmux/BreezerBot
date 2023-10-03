@@ -58,21 +58,47 @@ class Wallet(AddressChecker):
     def __init__(self):
         super().__init__()
         AddressChecker.__init__(self)
+        self.sdk_services = None
+        self.userid = ""
 
-        # Load settings
-        mnemonic = settings['secrets']['phrase']
-        invite_code = settings['secrets']['invite_code']
-        api_key = settings['secrets']['api_key']
+
+    def get_sdk(self,breez_sdk_api_key: str,
+                working_dir: str,
+                invite_code: str,
+                mnemonic: str,
+                ) -> breez_sdk.BlockingBreezServices:
+        # Create working dir
+        full_working_dir = os.path.join(os.getcwd(), working_dir)
+        #mkdir(full_working_dir)
+        # Configure and connect
+        seed = breez_sdk.mnemonic_to_seed(mnemonic)
+        config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, breez_sdk_api_key,
+                                          breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
+        config.working_dir = full_working_dir
+        #        self.sdk_services = breez_sdk.connect(config, seed, SDKListener())
+        sdk_services = breez_sdk.connect(config, seed, SDKListener())
+        # Get node info
+        node_info = sdk_services.node_info()
+        print(node_info)
+        return sdk_services
+
+    def open(self,userid):
+        # open the wallet for userid
+        self.userid = userid
+        secret = get_secrets(userid)
+        mnemonic = secret['phrase']
+        invite_code = secret['invite_code']
+        api_key = secret['api_key']
         seed = bip39.phrase_to_seed(mnemonic)
+        self.sdk_services = self.get_sdk(api_key,
+                        os.getcwd() + "/workdir/" + str(userid),
+                        invite_code,
+                        mnemonic,
+                        )
 
-        config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, api_key,
-            breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
 
-        config.working_dir = os.getcwd() + "/workdir"
-
-        # Connect to the Breez SDK
-        self.sdk_services = breez_sdk.connect(config, seed, SDKListener())
-
+    def disconnect(self):
+        self.sdk_services.disconnect()
 
     def get_info(self):
         try:
