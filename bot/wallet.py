@@ -6,6 +6,8 @@ import os
 from address_checker import AddressChecker
 import breez_sdk
 from models import InvoiceData, EventData
+import time
+from breez_sdk import LnUrlCallbackStatus, LnUrlPayResult, PaymentTypeFilter
 
 
 class SDKListener(breez_sdk.EventListener):
@@ -132,6 +134,12 @@ class Wallet(AddressChecker):
         except Exception as error:
             # Handle error
             print('error getting invoice: ', error)
+
+    def transactions(self):
+        now = time.time()
+        payments = self.sdk_services.list_payments(PaymentTypeFilter.ALL, 0, now)
+        print(payments)
+        return payments
 
 
     def pay_invoice(self, args):

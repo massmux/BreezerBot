@@ -11,7 +11,7 @@ from texts import *
 @bot.command("version")
 def version_command(handler):
     chat = bbot.Chat(bot, handler.chat)
-    chat.send("BreezerBot version 0.0.3 build 20231003")
+    chat.send("BreezerBot version 0.0.3 build 20231004")
 
 
 @bot.command("help")
@@ -20,17 +20,18 @@ def help_command(handler):
     chat.send(f"🖖Breezer Bot, Welcome"
               f"\n\nPythonic non custodial Breez SDK implementation."
               f"\n\nCommands summary"
-              f"\n/start 👉 Open the wallet"
               f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
               f"\n/pay <BOLT11> 👉 Pay an invoice"
               f"\n/info 👉 Get status and balance"
               f"\n/version 👉 Get current version"
               f"\n/help 👉 This message",syntax="markdown")
-    #nodeinfo = cli.get_info()
-    #if nodeinfo.channels_balance_msat==0:
-    #    chat.send(f"🤚Please note:"
-    #          f"\n\nYour balance in channels is actually: {nodeinfo.channels_balance_msat/1000} Sats"
-    #          f"\n\nA minimum amount of at least 3000 Sats is necessary to start. Just issue a Lightning invoice and get it paid from an external source.",syntax="markdown")
+
+
+
+@bot.command("start")
+def start_command(handler):
+    chat = bbot.Chat(bot, handler.chat)
+    chat.send(f"🖖Breezer Bot, Welcome", syntax="markdown")
 
 
 @bot.command("pay")
@@ -54,7 +55,7 @@ def pay_command(handler):
     a = InvoiceData()
     a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':0,'memo':'','payment_hash':''})
     please_wait = chat.send(f"*Payment in progress*. This may take several seconds, ❗*please wait..*❗",syntax='markdown')
-    if 1:
+    try:
         cli = Wallet()
         cli.open(chat.id)
         result = cli.pay_invoice(invoice)
@@ -63,16 +64,15 @@ def pay_command(handler):
         please_wait.delete()
         a.set_invoice(invoice, {'user': chat.id, 'bolt11': invoice, 'amount': result.amount_msat / 1000,'memo': result.description, 'payment_hash': result.details.data.payment_hash})
         chat.send(f"✔️*Invoice payment*"
-                  f"\n\nStatus: Succeed"
+                  f"\n\nResult: Succeed"
                   f"\n\nAmount: {result.amount_msat / 1000} Sats"
                   f"\nFees: {result.fee_msat / 1000} Sats "
                   f"\nDescription: {result.description}"
-                  f"\nPending: {result.pending}"
+                  f"\nStatus: {result.status}"
                   f"\nPayment hash: `{result.details.data.payment_hash}` ", syntax="markdown")
-        print(f"resultamount {result.Payment.amount}")
-    #except:
-    #    chat.send(WALLET_NOT_STARTED)
-
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 
 @bot.command("invoice")
@@ -82,7 +82,7 @@ def invoice_command(handler):
     memo = ''
     if len(args) > 1:
         memo = ' '.join(args[1:])
-    if 1:
+    try:
         please_wait = chat.send(f"*Invoice generation in progress*. This may take several seconds, ❗*please wait..*❗",
                                 syntax='markdown')
         cli = Wallet()
@@ -100,9 +100,9 @@ def invoice_command(handler):
         qrfile = qr.generate()
         please_wait.delete()
         chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
-        cli.disconnect()
-    #except:
-    #    chat.send(WALLET_NOT_STARTED)
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 
 @bot.command("info")
@@ -122,10 +122,23 @@ def info_command(handler):
               f"\nOn-chain balance: {nodeinfo.onchain_balance_msat/1000} Sats"
               f"\nChannels balance: {nodeinfo.channels_balance_msat / 1000} Sats"
               )
-        cli.disconnect()
-    except:
-        chat.send(WALLET_NOT_STARTED)
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
+@bot.command("transactions")
+def transactions_command(handler):
+    chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    try:
+        cli = Wallet()
+        cli.open(chat.id)
+        transactions = cli.transactions()
+        chat.send(f"💰*Transactions*"
+              f"\n\n{transactions}"
+              )
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 def events_processor(bot):
     # get events list and make notifications to the user
@@ -158,29 +171,9 @@ def events_processor(bot):
                                          f"\nPayment hash: `{result['payment_hash']}`", syntax="markdown")
         hdel_redis("payment.succeed", i)
 
+
 # events processor
 schedule.every(30).seconds.do(events_processor, bot)
-
-
-"""
-@bot.command("start")
-def start_command(handler):
-    # activate the wallet
-    global cli
-    chat=bbot.Chat(bot, handler.chat)
-    if 1:
-        #cli = Wallet(str(chat.id))
-        cli.start1(str(chat.id))
-        #threading.Thread(target=cli.start(), name='cli', daemon=True).start()
-        chat.send(f"▶️*Wallet Activated*"
-                  f"\n\nUser: {chat.id}"
-                  )
-    #except:
-    #    chat.send(f"⏹*Error Wallet not Activated*"
-    #              f"\n\nUser: {chat.id}"
-    #              f"\nEither an error or you did not initialize the wallet"
-    #              )
-"""
 
 
 if __name__ == "__main__":
