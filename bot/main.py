@@ -23,6 +23,7 @@ def help_command(handler):
               f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
               f"\n/pay <BOLT11> 👉 Pay an invoice"
               f"\n/info 👉 Get status and balance"
+              f"\n/transactions 👉 Get Transactions"
               f"\n/version 👉 Get current version"
               f"\n/help 👉 This message",syntax="markdown")
 
@@ -129,16 +130,25 @@ def info_command(handler):
 @bot.command("transactions")
 def transactions_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    howmany=20
     try:
         cli = Wallet()
         cli.open(chat.id)
-        transactions = cli.transactions()
-        chat.send(f"💰*Transactions*"
-              f"\n\n{transactions}"
+        transactions = cli.transactions(howmany)
+        msgbody=""
+        for i in transactions:
+            if i['payment_type']=='PaymentType.SENT':
+                msgbody=msgbody + f"\n🔴 {i['payment_time']} -{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
+            elif i['payment_type']=='PaymentType.RECEIVED':
+                msgbody = msgbody + f"\n🟢 {i['payment_time']} +{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
+        chat.send(f"💰*Last {howmany} Transactions*"
+              f"\n"
+              f"{msgbody}"
               )
     except Exception as err:
         print(f"{type(err).__name__} was raised: {err}")
         chat.send(GENERIC_ERROR)
+
 
 def events_processor(bot):
     # get events list and make notifications to the user

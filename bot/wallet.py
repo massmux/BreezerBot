@@ -7,7 +7,8 @@ from address_checker import AddressChecker
 import breez_sdk
 from models import InvoiceData, EventData
 import time
-from breez_sdk import LnUrlCallbackStatus, LnUrlPayResult, PaymentTypeFilter
+from breez_sdk import LnUrlCallbackStatus, LnUrlPayResult, PaymentTypeFilter, ListPaymentsRequest
+from datetime import datetime
 
 
 class SDKListener(breez_sdk.EventListener):
@@ -77,7 +78,6 @@ class Wallet(AddressChecker):
         config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, breez_sdk_api_key,
                                           breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
         config.working_dir = full_working_dir
-        #        self.sdk_services = breez_sdk.connect(config, seed, SDKListener())
         sdk_services = breez_sdk.connect(config, seed, SDKListener())
         # Get node info
         node_info = sdk_services.node_info()
@@ -98,9 +98,9 @@ class Wallet(AddressChecker):
                         mnemonic,
                         )
 
-
     def disconnect(self):
         self.sdk_services.disconnect()
+
 
     def get_info(self):
         try:
@@ -135,11 +135,31 @@ class Wallet(AddressChecker):
             # Handle error
             print('error getting invoice: ', error)
 
-    def transactions(self):
-        now = time.time()
-        payments = self.sdk_services.list_payments(PaymentTypeFilter.ALL, 0, now)
-        print(payments)
-        return payments
+    def transactions(self,howmany):
+        # Payment(id=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9, payment_type=PaymentType.SENT,
+        # payment_time=1693313642, amount_msat=500000, fee_msat=2002, status=PaymentStatus.COMPLETE,
+        # description=ritorno, details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9,
+        # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+        # payment_preimage=57c85dc5b3e375242b19f6d4f1c62cf1ce39065c76f78cabbafeb25db1a521c0, keysend=False,
+        # bolt11=lnbc5u1pjwm6jXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
+        now = int(time.time())
+        payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
+        res,count = [],0
+        #todo: order the list with the newest as first
+        for i in payments:
+            print(f"type: {i.payment_type} amount: {i.amount_msat}")
+            cur_datetime = datetime.fromtimestamp(i.payment_time)
+            res.append({'payment_type' : f"{i.payment_type}",
+                        'amount' : i.amount_msat/1000,
+                        'fee' : i.fee_msat/1000,
+                        'payment_timestamp' : i.payment_time,
+                        'payment_time' : cur_datetime.strftime("%m/%d/%Y, %H:%M:%S"),
+                        'description' : i.description,
+                        })
+            cont = cont+1
+            if cont == howmany:
+                break
+        return res
 
 
     def pay_invoice(self, args):

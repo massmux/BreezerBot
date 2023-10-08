@@ -13,3 +13,4 @@ workdir
 .idea
 qrdir
 tests.py
+breez_sdk.py
