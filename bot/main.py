@@ -11,7 +11,7 @@ from texts import *
 @bot.command("version")
 def version_command(handler):
     chat = bbot.Chat(bot, handler.chat)
-    chat.send("BreezerBot version 0.0.3 build 20231004")
+    chat.send("BreezerBot version 0.0.3 build 20231010")
 
 
 @bot.command("help")
