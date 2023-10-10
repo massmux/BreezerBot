@@ -1,4 +1,4 @@
-
+""" texts file """
 
 WALLET_NOT_STARTED = (f"❌*Unsuccessful*"
                  f"\n\nHave you started the wallet with /start ?"

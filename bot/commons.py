@@ -1,7 +1,8 @@
 import configparser
 import simplejson as json
 import redis
-import os, threading
+import os
+import threading
 import bbot
 
 settings = configparser.ConfigParser()
