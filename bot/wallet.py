@@ -35,8 +35,8 @@ class SDKListener(breez_sdk.EventListener):
             # Payment(id=eea8457798c6b9036904a607575d66516b3f9614f61f5da2acfb15c700930b43, payment_type=PaymentType.SENT, payment_time=1694193980,
             # amount_msat=1000, fee_msat=1004, pending=False, description=ricevi 3,
             # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=eea8457798c6b9036904a607575d66516b3f9614f61f5da2acfb15c700930b43,
-            # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
-            # payment_preimage=155fc30aca10af5e9646b1174ab236dac2fc130d7d531379a504dad0a027bbb6, keysend=False,
+            # label=, destination_pubkey=021a7a31f03a9XXXX,
+            # payment_preimage=155fc30aca10af5e9XXXX6, keysend=False,
             # bolt11=lnbc10n1pj0kkfkpp5a65y2aucc6usx6gy5cr4whtx294nl9s57c04mg4vlv2uwqynpdpsdqdwf5kxetkdXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
             print(f"event details {event.details}")
             print(f"[event]: PAYMENT_SUCCEED"
@@ -139,12 +139,12 @@ class Wallet(AddressChecker):
         # Payment(id=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9, payment_type=PaymentType.SENT,
         # payment_time=1693313642, amount_msat=500000, fee_msat=2002, status=PaymentStatus.COMPLETE,
         # description=ritorno, details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9,
-        # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
-        # payment_preimage=57c85dc5b3e375242b19f6d4f1c62cf1ce39065c76f78cabbafeb25db1a521c0, keysend=False,
+        # label=, destination_pubkey=021a7a31f03a9XXXX,
+        # payment_preimage=57c85dc5b3e375242XXXX, keysend=False,
         # bolt11=lnbc5u1pjwm6jXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
         now = int(time.time())
         payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
-        res,count = [],0
+        res,cont = [],0
         #todo: order the list with the newest as first
         for i in payments:
             print(f"type: {i.payment_type} amount: {i.amount_msat}")
@@ -156,7 +156,7 @@ class Wallet(AddressChecker):
                         'payment_time' : cur_datetime.strftime("%m/%d/%Y, %H:%M:%S"),
                         'description' : i.description,
                         })
-            cont = cont+1
+            cont = cont + 1
             if cont == howmany:
                 break
         return res

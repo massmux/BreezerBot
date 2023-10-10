@@ -46,13 +46,13 @@ def pay_command(handler):
     # result Payment(id=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe, payment_type=PaymentType.SENT,
     # payment_time=1696309010, amount_msat=12000, fee_msat=2034, status=PaymentStatus.COMPLETE, description=test 0656,
     # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe,
-    # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
-    # payment_preimage=00af43338fb23dbd7aa94f1c5bf240fe2466384b6085c5fc89a9683aab0d82a5, keysend=False,
+    # label=, destination_pubkey=021a7a31f0XXXX,
+    # payment_preimage=00af43338fb2XXXX, keysend=False,
     # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
 
     # resultdetails PaymentDetails.LN(data=LnPaymentDetails(payment_hash=a75cfe33226f2bf76697c600bc0d0a6afeb145cddb173d0c26040b5cb413fe30,
-    # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
-    # payment_preimage=25494ff83d8e51b36c8aa1084df715460fe3aa3164a211ba6e6ec4fd19ddd225, keysend=False,
+    # label=, destination_pubkey=021a7a31f03a9XXX,
+    # payment_preimage=25494ff83d8e51b36c8XXXX, keysend=False,
     # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None))
 
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
@@ -101,7 +101,7 @@ def invoice_command(handler):
              f"\nMemo: {memo}" \
              f"\n\n`{invoice}`"
         a = InvoiceData()
-        a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':amount,'memo':memo,'payment_hash':''})
+        a.set_invoice(invoice,{'user' : chat.id, 'bolt11' : invoice,'amount' : amount,'memo' : memo,'payment_hash' : ''})
         qrdir = os.getcwd() + "/qrdir"
         qr = InvoiceQR(invoice,qrdir)
         qrfile = qr.generate()
@@ -115,7 +115,7 @@ def invoice_command(handler):
 @bot.command("info")
 def info_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
-    # NodeState(id=02c6aaf466946ce43fcf56ecf6949127108c8b368c4af5c1ebe2d632c9eb5d4aa2, block_height=806614, channels_balance_msat=2858990,
+    # NodeState(id=02c6aaf466946ce43fcf56ecf69XXXX, block_height=806614, channels_balance_msat=2858990,
     # onchain_balance_msat=0, utxos=[], max_payable_msat=2858990, max_receivable_msat=3997141010, max_single_payment_amount_msat=4294967000,
     # max_chan_reserve_msats=0, connected_peers=['02c811e575be2df47d8b48dab3d3f1c9b0f6e16d0d40b5ed78253308fc2bd7170d'], inbound_liquidity_msats=90923010)
     try:
@@ -194,7 +194,6 @@ schedule.every(30).seconds.do(events_processor, bot)
 
 if __name__ == "__main__":
     threading.Thread(target=bot.infinity_polling, name='bot_infinity_polling', daemon=True).start()
-    #cli = Wallet()
     while (1):
         schedule.run_pending()
         ev = SDKListener()
