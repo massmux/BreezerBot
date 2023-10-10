@@ -20,10 +20,11 @@ cd BreezerBot
 configure the settings.ini file :
 
 - Telegram API from bothfather
-- Breez SDK: API key, invite code
-- Your own mnemonic phrase
+- Breez SDK: API key
 
 the docker containers may be built or downloaded from docker hub. In first case the building may take a long time. Please bear in mind that images will be quite big (because of the bindings). You have to consider to have aroung 11 GB free on your system.
+
+Invite code and phrase have to be set in redis at the moment. We will remove this in the next features for a different way.
 
 to build
 ```
