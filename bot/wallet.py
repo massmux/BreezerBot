@@ -90,7 +90,7 @@ class Wallet(AddressChecker):
         secret = get_secrets(userid)
         mnemonic = secret['phrase']
         invite_code = secret['invite_code']
-        api_key = secret['api_key']
+        api_key = settings['breez']['api_key']
         seed = bip39.phrase_to_seed(mnemonic)
         self.sdk_services = self.get_sdk(api_key,
                         os.getcwd() + "/workdir/" + str(userid),
@@ -110,7 +110,7 @@ class Wallet(AddressChecker):
             print(f"[get_info]\n{node_info}")
             return node_info
         except Exception as error:
-            print('Error getting LSP info: ', error)
+            print(f"in get_info {type(error).__name__} was raised: {error}")
 
 
     def get_invoice(self, arg):
@@ -133,7 +133,7 @@ class Wallet(AddressChecker):
             return invoice.ln_invoice.bolt11
         except Exception as error:
             # Handle error
-            print('error getting invoice: ', error)
+            print(f"in get_invoice {type(error).__name__} was raised: {error}")
 
     def transactions(self,howmany):
         # Payment(id=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9, payment_type=PaymentType.SENT,
@@ -169,6 +169,6 @@ class Wallet(AddressChecker):
             return res
         except Exception as error:
             # Handle error
-            print('error paying invoice: ', error)
+            print(f"in pay_invoice {type(error).__name__} was raised: {error}")
             return False
 

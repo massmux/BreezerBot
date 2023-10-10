@@ -33,6 +33,12 @@ def help_command(handler):
 def start_command(handler):
     chat = bbot.Chat(bot, handler.chat)
     chat.send(f"🖖Breezer Bot, Welcome", syntax="markdown")
+    chatuser = get_secrets(chat.id)
+    if not chatuser:
+        chat.send(f"❌*User not Active*"
+                  f"\n\nUser: {chat.id}"
+                  f"\nStatus: Not Active"
+                  f"\n\nPlease request activation for your user to be able working with this Wallet Bot.", syntax="markdown")
 
 
 @bot.command("pay")

@@ -70,7 +70,7 @@ def hkeys_redis(name):
 
 
 def set_secrets(userid, keyset):
-    # {'phrase': 'diary rage begin xx', 'invite_code': 'AAAA-BBBB', 'api_key': 'XXXX='}
+    # {'phrase': 'diary rage begin xx', 'invite_code': 'AAAA-BBBB' }
     if hset_redis('secrets', userid, json.dumps(keyset)):
         return True
     else:
