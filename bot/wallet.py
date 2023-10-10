@@ -6,6 +6,9 @@ import os
 from address_checker import AddressChecker
 import breez_sdk
 from models import InvoiceData, EventData
+import time
+from breez_sdk import LnUrlCallbackStatus, LnUrlPayResult, PaymentTypeFilter, ListPaymentsRequest
+from datetime import datetime
 
 
 class SDKListener(breez_sdk.EventListener):
@@ -58,20 +61,45 @@ class Wallet(AddressChecker):
     def __init__(self):
         super().__init__()
         AddressChecker.__init__(self)
+        self.sdk_services = None
+        self.userid = ""
 
-        # Load settings
-        mnemonic = settings['secrets']['phrase']
-        invite_code = settings['secrets']['invite_code']
-        api_key = settings['secrets']['api_key']
+
+    def get_sdk(self,breez_sdk_api_key: str,
+                working_dir: str,
+                invite_code: str,
+                mnemonic: str,
+                ) -> breez_sdk.BlockingBreezServices:
+        # Create working dir
+        full_working_dir = os.path.join(os.getcwd(), working_dir)
+        #mkdir(full_working_dir)
+        # Configure and connect
+        seed = breez_sdk.mnemonic_to_seed(mnemonic)
+        config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, breez_sdk_api_key,
+                                          breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
+        config.working_dir = full_working_dir
+        sdk_services = breez_sdk.connect(config, seed, SDKListener())
+        # Get node info
+        node_info = sdk_services.node_info()
+        print(node_info)
+        return sdk_services
+
+    def open(self,userid):
+        # open the wallet for userid
+        self.userid = userid
+        secret = get_secrets(userid)
+        mnemonic = secret['phrase']
+        invite_code = secret['invite_code']
+        api_key = settings['breez']['api_key']
         seed = bip39.phrase_to_seed(mnemonic)
+        self.sdk_services = self.get_sdk(api_key,
+                        os.getcwd() + "/workdir/" + str(userid),
+                        invite_code,
+                        mnemonic,
+                        )
 
-        config = breez_sdk.default_config(breez_sdk.EnvironmentType.PRODUCTION, api_key,
-            breez_sdk.NodeConfig.GREENLIGHT(breez_sdk.GreenlightNodeConfig(None, invite_code)))
-
-        config.working_dir = os.getcwd() + "/workdir"
-
-        # Connect to the Breez SDK
-        self.sdk_services = breez_sdk.connect(config, seed, SDKListener())
+    def disconnect(self):
+        self.sdk_services.disconnect()
 
 
     def get_info(self):
@@ -82,7 +110,7 @@ class Wallet(AddressChecker):
             print(f"[get_info]\n{node_info}")
             return node_info
         except Exception as error:
-            print('Error getting LSP info: ', error)
+            print(f"in get_info {type(error).__name__} was raised: {error}")
 
 
     def get_invoice(self, arg):
@@ -105,7 +133,33 @@ class Wallet(AddressChecker):
             return invoice.ln_invoice.bolt11
         except Exception as error:
             # Handle error
-            print('error getting invoice: ', error)
+            print(f"in get_invoice {type(error).__name__} was raised: {error}")
+
+    def transactions(self,howmany):
+        # Payment(id=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9, payment_type=PaymentType.SENT,
+        # payment_time=1693313642, amount_msat=500000, fee_msat=2002, status=PaymentStatus.COMPLETE,
+        # description=ritorno, details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9,
+        # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+        # payment_preimage=57c85dc5b3e375242b19f6d4f1c62cf1ce39065c76f78cabbafeb25db1a521c0, keysend=False,
+        # bolt11=lnbc5u1pjwm6jXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
+        now = int(time.time())
+        payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
+        res,count = [],0
+        #todo: order the list with the newest as first
+        for i in payments:
+            print(f"type: {i.payment_type} amount: {i.amount_msat}")
+            cur_datetime = datetime.fromtimestamp(i.payment_time)
+            res.append({'payment_type' : f"{i.payment_type}",
+                        'amount' : i.amount_msat/1000,
+                        'fee' : i.fee_msat/1000,
+                        'payment_timestamp' : i.payment_time,
+                        'payment_time' : cur_datetime.strftime("%m/%d/%Y, %H:%M:%S"),
+                        'description' : i.description,
+                        })
+            cont = cont+1
+            if cont == howmany:
+                break
+        return res
 
 
     def pay_invoice(self, args):
@@ -115,6 +169,6 @@ class Wallet(AddressChecker):
             return res
         except Exception as error:
             # Handle error
-            print('error paying invoice: ', error)
+            print(f"in pay_invoice {type(error).__name__} was raised: {error}")
             return False
 

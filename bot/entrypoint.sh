@@ -12,4 +12,4 @@ error() {
 echo "export TZ=\"/usr/share/zoneinfo/Europe/Zurich\"" >>  ~/.bashrc 
 
 # run the software
-./main.py 
+python3 ./main.py 

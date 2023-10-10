@@ -10,7 +10,7 @@ services:
                 context: .
                 dockerfile: Dockerfile
         volumes:
-          #- ${PWD}/bot:/opt/breezerbot
+                - ${PWD}/bot:/opt/breezerbot
                 - ${PWD}/workdir:/opt/breezerbot/workdir
                 - ${PWD}/qrdir:/opt/breezerbot/qrdir
                 - ${PWD}/settings.ini:/opt/breezerbot/settings.ini

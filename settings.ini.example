@@ -10,8 +10,5 @@ redisdb_port = 6379
 [bot]
 api_key = XXXX
 
-[secrets]
-phrase = plate naive XXXX
-invite_code = ABCD-EFGH
-api_key = XXXX
-telegram_user = 200260523
+[breez]
+api_key = YYYY

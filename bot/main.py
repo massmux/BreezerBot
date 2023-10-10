@@ -3,6 +3,7 @@
 import schedule
 from wallet import *
 from models import InvoiceQR, InvoiceData, EventData, TlgUser
+from texts import *
 
 #https://github.com/tmrwapp/breez-sdk-cli-wallet/
 
@@ -10,88 +11,105 @@ from models import InvoiceQR, InvoiceData, EventData, TlgUser
 @bot.command("version")
 def version_command(handler):
     chat = bbot.Chat(bot, handler.chat)
-    chat.send("BreezerBot version 0.0.1 build 20230913")
+    chat.send("BreezerBot version 0.0.3 build 20231010")
+
+
+@bot.command("help")
+def help_command(handler):
+    chat = bbot.Chat(bot, handler.chat)
+    chat.send(f"🖖Breezer Bot, Welcome"
+              f"\n\nPythonic non custodial Breez SDK implementation."
+              f"\n\nCommands summary"
+              f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
+              f"\n/pay <BOLT11> 👉 Pay an invoice"
+              f"\n/info 👉 Get status and balance"
+              f"\n/transactions 👉 Get Transactions"
+              f"\n/version 👉 Get current version"
+              f"\n/help 👉 This message",syntax="markdown")
+
 
 
 @bot.command("start")
 def start_command(handler):
     chat = bbot.Chat(bot, handler.chat)
-    tlg = TlgUser(chat.id)
-    if not tlg.is_authorized():
-        chat.send(f"❌User not authorized!")
-        return
-    chat.send(f"🖖Breez(er) Bot, Welcome"
-              f"\n\nPythonic non custodial breez sdk implementation."
-              f"\n\nCommands summary"
-              f"\n/invoice <AMOUNT> <DESCRIPTION> 👉 Issue an invoice"
-              f"\n/pay <BOLT11> 👉 Pay an invoice"
-              f"\n/info Get status and balance"
-              f"\n/start This message",syntax="markdown")
-    nodeinfo = cli.get_info()
-    if nodeinfo.channels_balance_msat==0:
-        chat.send(f"🤚Please note:"
-              f"\n\nYour balance in channels is actually: {nodeinfo.channels_balance_msat/1000} Sats"
-              f"\n\nA minimum amount of at least 3000 Sats is necessary to start. Just issue a Lightning invoice and get it paid from an external source.",syntax="markdown")
+    chat.send(f"🖖Breezer Bot, Welcome", syntax="markdown")
+    chatuser = get_secrets(chat.id)
+    if not chatuser:
+        chat.send(f"❌*User not Active*"
+                  f"\n\nUser: {chat.id}"
+                  f"\nStatus: Not Active"
+                  f"\n\nPlease request activation for your user to be able working with this Wallet Bot.", syntax="markdown")
 
 
 @bot.command("pay")
 def pay_command(handler):
-    # result Payment(id=45400f9d18edddc93fa6506878bfea1e23956f20d1408536c6bdfb073e443be2, payment_type=PaymentType.SENT, payment_time=1694239982,
-    # amount_msat=1000, fee_msat=1004, pending=False, description=f,
-    # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=45400f9d18edddc93fa6506878bfea1e23956f20d1408536c6bdfb073e443be2, label=,
-    # destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
-    # payment_preimage=9a89e8c0f2c3ea20c7fe8d3a885cb84a084d3872b384cbd94ca1f6e71fb11ca4, keysend=False,
-    # bolt11=lnbc10n1pj0cr8qpp5gXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None)))
+    # result Payment(id=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe, payment_type=PaymentType.SENT,
+    # payment_time=1696309010, amount_msat=12000, fee_msat=2034, status=PaymentStatus.COMPLETE, description=test 0656,
+    # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe,
+    # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+    # payment_preimage=00af43338fb23dbd7aa94f1c5bf240fe2466384b6085c5fc89a9683aab0d82a5, keysend=False,
+    # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
+
+    # resultdetails PaymentDetails.LN(data=LnPaymentDetails(payment_hash=a75cfe33226f2bf76697c600bc0d0a6afeb145cddb173d0c26040b5cb413fe30,
+    # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+    # payment_preimage=25494ff83d8e51b36c8aa1084df715460fe3aa3164a211ba6e6ec4fd19ddd225, keysend=False,
+    # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None))
+
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
-    tlg = TlgUser(chat.id)
-    if not tlg.is_authorized():
-        chat.send(f"❌User not authorized!")
-        return
     invoice = args[0]
     # caching the invoice for payment notification #qui
     hset_redis("invoices", invoice, chat.id)
     a = InvoiceData()
     a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':0,'memo':'','payment_hash':''})
     please_wait = chat.send(f"*Payment in progress*. This may take several seconds, ❗*please wait..*❗",syntax='markdown')
-    result = cli.pay_invoice(invoice)
-    print(f"result {result}")
-    please_wait.delete()
-    a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':result.amount_msat/1000,'memo':result.description,'payment_hash':result.details.data.payment_hash})
-    chat.send(f"✔️*Invoice payment*"
-              f"\n\nStatus: Succeed"
-              f"\n\nAmount: {result.amount_msat/1000} Sats"
-              f"\nFees: {result.fee_msat/1000} Sats "
-              f"\nDescription: {result.description}"
-              f"\nPending: {result.pending}"
-              f"\nPayment hash: `{result.details.data.payment_hash}` ", syntax="markdown")
-
+    try:
+        cli = Wallet()
+        cli.open(chat.id)
+        result = cli.pay_invoice(invoice)
+        print(f"result {result}")
+        print(f"resultdetails {result.details}")
+        please_wait.delete()
+        a.set_invoice(invoice, {'user': chat.id, 'bolt11': invoice, 'amount': result.amount_msat / 1000,'memo': result.description, 'payment_hash': result.details.data.payment_hash})
+        chat.send(f"✔️*Invoice payment*"
+                  f"\n\nResult: Succeed"
+                  f"\n\nAmount: {result.amount_msat / 1000} Sats"
+                  f"\nFees: {result.fee_msat / 1000} Sats "
+                  f"\nDescription: {result.description}"
+                  f"\nStatus: {result.status}"
+                  f"\nPayment hash: `{result.details.data.payment_hash}` ", syntax="markdown")
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 
 @bot.command("invoice")
 def invoice_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
-    tlg = TlgUser(chat.id)
-    if not tlg.is_authorized():
-        chat.send(f"❌User not authorized!")
-        return
     amount = args[0]
     memo = ''
     if len(args) > 1:
         memo = ' '.join(args[1:])
-    invoice = cli.get_invoice(f"{amount} {memo}")
-    caption =f"⚡️*Lightning Invoice*" \
+    try:
+        please_wait = chat.send(f"*Invoice generation in progress*. This may take several seconds, ❗*please wait..*❗",
+                                syntax='markdown')
+        cli = Wallet()
+        cli.open(chat.id)
+        invoice = cli.get_invoice(f"{amount} {memo}")
+        caption =f"⚡️*Lightning Invoice*" \
              f"\n\nUser: {chat.id}" \
              f"\nAmount: {amount} Sats" \
              f"\nMemo: {memo}" \
              f"\n\n`{invoice}`"
-    a = InvoiceData()
-    a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':amount,'memo':memo,'payment_hash':''})
-    qrdir = os.getcwd() + "/qrdir"
-    qr = InvoiceQR(invoice,qrdir)
-    qrfile = qr.generate()
-    chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
-
-
+        a = InvoiceData()
+        a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':amount,'memo':memo,'payment_hash':''})
+        qrdir = os.getcwd() + "/qrdir"
+        qr = InvoiceQR(invoice,qrdir)
+        qrfile = qr.generate()
+        please_wait.delete()
+        chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 
 @bot.command("info")
@@ -100,24 +118,46 @@ def info_command(handler):
     # NodeState(id=02c6aaf466946ce43fcf56ecf6949127108c8b368c4af5c1ebe2d632c9eb5d4aa2, block_height=806614, channels_balance_msat=2858990,
     # onchain_balance_msat=0, utxos=[], max_payable_msat=2858990, max_receivable_msat=3997141010, max_single_payment_amount_msat=4294967000,
     # max_chan_reserve_msats=0, connected_peers=['02c811e575be2df47d8b48dab3d3f1c9b0f6e16d0d40b5ed78253308fc2bd7170d'], inbound_liquidity_msats=90923010)
-    tlg = TlgUser(chat.id)
-    if not tlg.is_authorized():
-        chat.send(f"❌User not authorized!")
-        return
-    nodeinfo = cli.get_info()
-    chat.send(f"💰*Wallet Info*"
+    try:
+        cli = Wallet()
+        cli.open(chat.id)
+        nodeinfo = cli.get_info()
+        chat.send(f"💰*Wallet Info*"
               f"\n\nChannels balance: {nodeinfo.channels_balance_msat/1000} Sats"
               f"\nMax payable: {nodeinfo.max_payable_msat/1000} Sats"
               f"\nMax receivable: {nodeinfo.max_receivable_msat/1000} Sats"
               f"\nOn-chain balance: {nodeinfo.onchain_balance_msat/1000} Sats"
               f"\nChannels balance: {nodeinfo.channels_balance_msat / 1000} Sats"
               )
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
+@bot.command("transactions")
+def transactions_command(handler):
+    chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    howmany=20
+    try:
+        cli = Wallet()
+        cli.open(chat.id)
+        transactions = cli.transactions(howmany)
+        msgbody=""
+        for i in transactions:
+            if i['payment_type']=='PaymentType.SENT':
+                msgbody=msgbody + f"\n🔴 {i['payment_time']} -{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
+            elif i['payment_type']=='PaymentType.RECEIVED':
+                msgbody = msgbody + f"\n🟢 {i['payment_time']} +{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
+        chat.send(f"💰*Last {howmany} Transactions*"
+              f"\n"
+              f"{msgbody}"
+              )
+    except Exception as err:
+        print(f"{type(err).__name__} was raised: {err}")
+        chat.send(GENERIC_ERROR)
 
 
 def events_processor(bot):
     # get events list and make notifications to the user
-
     invoices_paid = hkeys_redis("invoice.paid")
     for i in invoices_paid:
         print(f"Processing invoice.paid {i}")
@@ -130,6 +170,7 @@ def events_processor(bot):
                                          f"\nMemo: {result['memo']}"
                                          f"\nPayment hash: {result['payment_hash']}", syntax="markdown")
         hdel_redis("invoice.paid", i)
+
 
     payment_succeed = hkeys_redis("payment.succeed")
     for i in payment_succeed:
@@ -147,12 +188,13 @@ def events_processor(bot):
         hdel_redis("payment.succeed", i)
 
 
+# events processor
 schedule.every(30).seconds.do(events_processor, bot)
 
 
 if __name__ == "__main__":
     threading.Thread(target=bot.infinity_polling, name='bot_infinity_polling', daemon=True).start()
-    cli = Wallet()
+    #cli = Wallet()
     while (1):
         schedule.run_pending()
         ev = SDKListener()
