@@ -135,7 +135,7 @@ class Wallet(AddressChecker):
             # Handle error
             print(f"in get_invoice {type(error).__name__} was raised: {error}")
 
-    def transactions(self,howmany):
+    def transactions(self, howmany):
         # Payment(id=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9, payment_type=PaymentType.SENT,
         # payment_time=1693313642, amount_msat=500000, fee_msat=2002, status=PaymentStatus.COMPLETE,
         # description=ritorno, details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=9b8da9e9dd58451faeb6e784bb935f97d1233a1235e9d6d217e20eeefe36b3e9,
@@ -145,7 +145,7 @@ class Wallet(AddressChecker):
         now = int(time.time())
         payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
         res,cont = [],0
-        #todo: order the list with the newest as first
+        # todo: order the list with the newest as first
         for i in payments:
             print(f"type: {i.payment_type} amount: {i.amount_msat}")
             cur_datetime = datetime.fromtimestamp(i.payment_time)
@@ -172,3 +172,38 @@ class Wallet(AddressChecker):
             print(f"in pay_invoice {type(error).__name__} was raised: {error}")
             return False
 
+
+    def lnurlw(self, lnurl, amount=0):
+        # getting LNURLw
+        # LnUrlWithdrawResult.OK(data=LnUrlWithdrawSuccessData(invoice=LnInvoice(bolt11=lnbc510n1pjj3aw2sp5qwmrXXX,
+        # payee_pubkey=02c6aaf466946ce43fcf56xx, payment_hash=184c49ef5d4e5ffe2aae60c624558d9f404dbb8073b3ed65e1515bcab53d0235,
+        # description=withdrawing using lnurl 200260523, description_hash=None, amount_msat=51000, timestamp=1697183178, expiry=3600,
+        # routing_hints=[<breez_sdk.RouteHint object at 0x7f38602246d0>],
+        # payment_secret=[3, 182, 62, 93, 117, 156, 221, 45, 184, 244, 90, 193, 56, 84, 2, 244, 25, 28, 76, 153, 96, 48, 224, 235, 75, 51, 100, 135, 7, 24, 119, 139])))
+        print(f'LNURL: {lnurl}')
+        try:
+            parsed_input = breez_sdk.parse_input(lnurl)
+            if isinstance(parsed_input, breez_sdk.InputType.LN_URL_WITHDRAW):
+                #self.print_ln_url_withdraw_request_data(parsed_input.data)
+                minimum = parsed_input.data.min_withdrawable
+                maximum = parsed_input.data.max_withdrawable
+                amount_sats = int(amount)
+                amount_msats = int(amount) * 1E3
+                if amount_sats !=0:
+                    if amount_msats < minimum:
+                        print('Amount is less than minimum')
+                        return
+                    if amount_msats > maximum:
+                        print('Amount is greater than maximum')
+                        return
+                else:
+                    amount_sats = maximum
+                print(f'Requesting Withdrawal of {amount_sats} Sats')
+                result = self.sdk_services.withdraw_lnurl(parsed_input.data, amount_sats, "LNURLw user " + self.userid )
+                print(result)
+                return result
+            else:
+                print('Invalid LNURLw')
+        except Exception as error:
+            print('❌ Error withdrawing using lnurl: ', error)
+            return None
