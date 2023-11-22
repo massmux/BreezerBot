@@ -43,42 +43,36 @@ def start_command(handler):
 
 @bot.command("pay")
 def pay_command(handler):
-    # result Payment(id=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe, payment_type=PaymentType.SENT,
-    # payment_time=1696309010, amount_msat=12000, fee_msat=2034, status=PaymentStatus.COMPLETE, description=test 0656,
-    # details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=ecda441eedbb3ea43e1a36b138e102a676463b3aef2c5e5355ff704a6c9121fe,
-    # label=, destination_pubkey=021a7a31f0XXXX,
-    # payment_preimage=00af43338fb2XXXX, keysend=False,
-    # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
-
-    # resultdetails PaymentDetails.LN(data=LnPaymentDetails(payment_hash=a75cfe33226f2bf76697c600bc0d0a6afeb145cddb173d0c26040b5cb413fe30,
-    # label=, destination_pubkey=021a7a31f03a9XXX,
-    # payment_preimage=25494ff83d8e51b36c8XXXX, keysend=False,
-    # bolt11=lnbc100n1pj3hy5epp5q8ydgtx, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None))
-
+    # result SendPaymentResponse(payment=Payment(id=e0a41f2c242d66a645fcb5684c25768a4aafe75e03f9b39dd54e6fe4efb2cb2d,
+    # payment_type=PaymentType.SENT, payment_time=1700657330, amount_msat=22000, fee_msat=2713, status=PaymentStatus.COMPLETE,
+    # description=1347 (@SatsMobiBot), details=PaymentDetails.LN(data=LnPaymentDetails(payment_hash=e0a41f2c242d66a645fcb5684c25768a4aafe75e03f9b39dd54e6fe4efb2cb2d,
+    # label=, destination_pubkey=021a7a31f03a9b49807eb18ef03046e264871a1d03cd4cb80d37265499d1b726b9,
+    # payment_preimage=f7f3758c8234e880605ee1e9971437c24cd2b082aed9728fb2ccfda20f4998dd, keysend=False,
+    # bolt11=lnbc220n1pj4m7zjpXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None, swap_info=None))))
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
     invoice = args[0]
     # caching the invoice for payment notification #qui
     hset_redis("invoices", invoice, chat.id)
     a = InvoiceData()
-    a.set_invoice(invoice,{'user':chat.id,'bolt11':invoice,'amount':0,'memo':'','payment_hash':''})
+    a.set_invoice(invoice,{'user' : chat.id, 'bolt11': invoice, 'amount' : 0, 'memo' : '' , 'payment_hash' : '' })
     please_wait = chat.send(f"*Payment in progress*. This may take several seconds, ❗*please wait..*❗",syntax='markdown')
     try:
         cli = Wallet()
         cli.open(chat.id)
         result = cli.pay_invoice(invoice)
         print(f"result {result}")
-        print(f"resultdetails {result.details}")
         please_wait.delete()
-        a.set_invoice(invoice, {'user': chat.id, 'bolt11': invoice, 'amount': result.amount_msat / 1000,'memo': result.description, 'payment_hash': result.details.data.payment_hash})
+        a.set_invoice(invoice, {'user': chat.id, 'bolt11': invoice, 'amount': result.payment.amount_msat / 1000,'memo': result.payment.description, 'payment_hash': result.payment.details.data.payment_hash})
         chat.send(f"✔️*Invoice payment*"
                   f"\n\nResult: Succeed"
-                  f"\n\nAmount: {result.amount_msat / 1000} Sats"
-                  f"\nFees: {result.fee_msat / 1000} Sats "
-                  f"\nDescription: {result.description}"
-                  f"\nStatus: {result.status}"
-                  f"\nPayment hash: `{result.details.data.payment_hash}` ", syntax="markdown")
+                  f"\n\nAmount: {result.payment.amount_msat / 1000} Sats"
+                  f"\nFees: {result.payment.fee_msat / 1000} Sats "
+                  f"\nDescription: {result.payment.description}"
+                  f"\nStatus: {result.payment.status}"
+                  f"\nPayment hash: `{result.payment.details.data.payment_hash}` "
+                  , syntax="markdown")
     except Exception as err:
-        print(f"{type(err).__name__} was raised: {err}")
+        print(f"in pay(bot) {type(err).__name__} was raised: {err}")
         chat.send(GENERIC_ERROR)
 
 
@@ -95,7 +89,7 @@ def invoice_command(handler):
         cli = Wallet()
         cli.open(chat.id)
         invoice = cli.get_invoice(f"{amount} {memo}")
-        caption =f"⚡️*Lightning Invoice*" \
+        caption = f"⚡️*Lightning Invoice*" \
              f"\n\nUser: {chat.id}" \
              f"\nAmount: {amount} Sats" \
              f"\nMemo: {memo}" \
@@ -108,7 +102,7 @@ def invoice_command(handler):
         please_wait.delete()
         chat.send_photo(f"{qrfile}", caption=caption, syntax='markdown')
     except Exception as err:
-        print(f"{type(err).__name__} was raised: {err}")
+        print(f"in invoice (bot) {type(err).__name__} was raised: {err}")
         chat.send(GENERIC_ERROR)
 
 
@@ -130,8 +124,9 @@ def info_command(handler):
               f"\nChannels balance: {nodeinfo.channels_balance_msat / 1000} Sats"
               )
     except Exception as err:
-        print(f"{type(err).__name__} was raised: {err}")
+        print(f"in info (bot) {type(err).__name__} was raised: {err}")
         chat.send(GENERIC_ERROR)
+
 
 @bot.command("transactions")
 def transactions_command(handler):
@@ -152,7 +147,7 @@ def transactions_command(handler):
               f"{msgbody}"
               )
     except Exception as err:
-        print(f"{type(err).__name__} was raised: {err}")
+        print(f"in transactions (bot) {type(err).__name__} was raised: {err}")
         chat.send(GENERIC_ERROR)
 
 
