@@ -76,6 +76,16 @@ def pay_command(handler):
         chat.send(GENERIC_ERROR)
 
 
+@bot.command("keysend")
+def keysend_command(handler):
+    chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()
+    nodepub,amount = args[0], args[1]
+    cli = Wallet()
+    cli.open(chat.id)
+    result = cli.keysend(nodepub,amount)
+    print(result)
+
+
 @bot.command("invoice")
 def invoice_command(handler):
     chat, message, args, btns = bbot.Chat(bot, handler.chat), bbot.Message(bot, handler), bbot.Args(handler).GetArgs(), bbot.Buttons()

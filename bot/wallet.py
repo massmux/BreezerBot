@@ -185,3 +185,14 @@ class Wallet(AddressChecker):
             print(f"in pay_invoice {type(error).__name__} was raised: {error}")
             return False
 
+    def keysend(self, nodepub,amount):
+        amount_msat = int(amount) * 1000
+        # todo: write in redis to get the notification when sent
+        try:
+            req = breez_sdk.SendSpontaneousPaymentRequest(nodepub, amount_msat)
+            result = self.sdk_services.send_spontaneous_payment(req)
+            return result
+        except Exception as error:
+            print(error)
+            print(f"in keysend {type(error).__name__} was raised: {error}")
+            return False
