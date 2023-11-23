@@ -138,9 +138,9 @@ def transactions_command(handler):
         transactions = cli.transactions(howmany)
         msgbody=""
         for i in transactions:
-            if i['payment_type']=='PaymentType.SENT':
+            if i['payment_type'] == 'PaymentType.SENT':
                 msgbody=msgbody + f"\n🔴 {i['payment_time']} -{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
-            elif i['payment_type']=='PaymentType.RECEIVED':
+            elif i['payment_type'] == 'PaymentType.RECEIVED':
                 msgbody = msgbody + f"\n🟢 {i['payment_time']} +{i['amount']} Sats (fee: {i['fee']}) {i['description']}"
         chat.send(f"💰*Last {howmany} Transactions*"
               f"\n"

@@ -146,7 +146,8 @@ class Wallet(AddressChecker):
         # payment_preimage=57c85dc5b3e375242XXXX, keysend=False,
         # bolt11=lnbc5u1pjwm6jXXXX, lnurl_success_action=None, lnurl_metadata=None, ln_address=None, lnurl_withdraw_endpoint=None)))
         now = int(time.time())
-        payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
+        ##payments = self.sdk_services.list_payments(ListPaymentsRequest(PaymentTypeFilter.ALL, 0, now))
+        payments = self.sdk_services.list_payments(ListPaymentsRequest(None,0, now))
         res,cont = [],0
         # todo: order the list with the newest as first
         for i in payments:
@@ -156,7 +157,7 @@ class Wallet(AddressChecker):
                         'amount' : i.amount_msat/1000,
                         'fee' : i.fee_msat/1000,
                         'payment_timestamp' : i.payment_time,
-                        'payment_time' : cur_datetime.strftime("%m/%d/%Y, %H:%M:%S"),
+                        'payment_time' : cur_datetime.strftime("%Y/%m/%d, %H:%M:%S"),
                         'description' : i.description,
                         })
             cont = cont + 1

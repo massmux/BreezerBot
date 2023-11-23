@@ -8,7 +8,7 @@ settings.read('settings.ini')
 # redis persistence docs: https://redis.io/topics/persistence
 
 # connect to redis
-r = redis.StrictRedis(host=settings['redis']['redisdb_host'], port=settings['redis']['redisdb_port'], db=settings['redis']['redisdb'])
+r = redis.StrictRedis(host = settings['redis']['redisdb_host'], port = settings['redis']['redisdb_port'], db = settings['redis']['redisdb'])
 
 
 """redis objects storage"""
